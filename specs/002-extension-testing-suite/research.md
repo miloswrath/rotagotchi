@@ -53,7 +53,8 @@ rather than hard-coding it.
 // playwright.config.ts – shared fixture
 const pathToExtension = path.join(__dirname, 'extension');
 const context = await chromium.launchPersistentContext('', {
-  headless: false,          // required for extensions in older Chromium builds
+  channel: 'chromium',
+  headless: !!process.env.CI,
   args: [
     `--disable-extensions-except=${pathToExtension}`,
     `--load-extension=${pathToExtension}`,
@@ -61,10 +62,9 @@ const context = await chromium.launchPersistentContext('', {
 });
 ```
 
-**Note on headless**: Playwright ≥ v1.44 supports a new `--headless=new` mode that allows
-extensions; older builds require `headless: false`. Using `headless: false` in CI is safe
-because GitHub Actions runners have a virtual display via xvfb-run (Ubuntu 22.04). Add
-`--no-sandbox` for CI environments.
+**Note on headless**: Playwright ≥ v1.44 supports Chromium extension testing in headless
+mode when using the `chromium` channel. Running headless in CI avoids depending on a
+display server on GitHub-hosted runners. Add `--no-sandbox` for CI environments.
 
 ---
 

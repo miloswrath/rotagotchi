@@ -2,17 +2,19 @@ import { defineConfig } from '@playwright/test';
 import path from 'path';
 
 const pathToExtension = path.resolve(__dirname, 'extension');
+const extensionArgs = [
+  `--disable-extensions-except=${pathToExtension}`,
+  `--load-extension=${pathToExtension}`,
+  '--no-sandbox',
+];
 
 export default defineConfig({
   testDir: './tests',
   use: {
-    headless: false,
+    channel: 'chromium',
+    headless: !!process.env.CI,
     launchOptions: {
-      args: [
-        `--disable-extensions-except=${pathToExtension}`,
-        `--load-extension=${pathToExtension}`,
-        '--no-sandbox',
-      ],
+      args: extensionArgs,
     },
   },
   projects: [

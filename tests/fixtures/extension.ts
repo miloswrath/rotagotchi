@@ -6,16 +6,19 @@ export type ExtensionFixtures = {
   extensionId: string;
 };
 
+const pathToExtension = path.resolve(__dirname, '../../extension');
+const extensionArgs = [
+  `--disable-extensions-except=${pathToExtension}`,
+  `--load-extension=${pathToExtension}`,
+  '--no-sandbox',
+];
+
 export const test = base.extend<ExtensionFixtures>({
   context: async ({}, use) => {
-    const pathToExtension = path.resolve(__dirname, '../../extension');
     const context = await chromium.launchPersistentContext('', {
-      headless: false,
-      args: [
-        `--disable-extensions-except=${pathToExtension}`,
-        `--load-extension=${pathToExtension}`,
-        '--no-sandbox',
-      ],
+      channel: 'chromium',
+      headless: !!process.env.CI,
+      args: extensionArgs,
     });
     await use(context);
     await context.close();

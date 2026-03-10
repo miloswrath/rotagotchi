@@ -78,4 +78,5 @@ await page.goto(`chrome-extension://${extensionId}/popup.html`);
 - `testDir`: `./tests`
 - Two projects: `e2e` (testMatch: `e2e/**/*.spec.ts`) and `smoke` (testMatch: `smoke/**/*.spec.ts`)
 - Shared extension fixture available to both projects
-- `use.headless: false` (required for extension loading; safe in CI)
+- `use.channel: 'chromium'` to support extension loading in CI-safe headless mode
+- `use.headless` configured to run headless in CI environments without a display server
