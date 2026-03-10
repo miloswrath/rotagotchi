@@ -29,19 +29,19 @@ NIX_BINTOOLS='/nix/store/vrkxj51s4a1awh7m4p4f1w29wad5s20m-binutils-wrapper-2.43.
 export NIX_BINTOOLS
 NIX_BINTOOLS_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu='1'
 export NIX_BINTOOLS_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
-NIX_BUILD_CORES='22'
+NIX_BUILD_CORES='16'
 export NIX_BUILD_CORES
 NIX_CC='/nix/store/4ijy8jbsiqmj37avrk83gn2m903486mr-gcc-wrapper-14-20241116'
 export NIX_CC
 NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu='1'
 export NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
-NIX_CFLAGS_COMPILE=' -frandom-seed=72jg2vzkhs -isystem /nix/store/i1jdnip70qb7yh4krlzsgyxs0zdvw7xv-nodejs-22.13.1/include -isystem /nix/store/i1jdnip70qb7yh4krlzsgyxs0zdvw7xv-nodejs-22.13.1/include'
+NIX_CFLAGS_COMPILE=' -frandom-seed=q0yy31vrw3 -isystem /nix/store/i1jdnip70qb7yh4krlzsgyxs0zdvw7xv-nodejs-22.13.1/include -isystem /nix/store/i1jdnip70qb7yh4krlzsgyxs0zdvw7xv-nodejs-22.13.1/include'
 export NIX_CFLAGS_COMPILE
 NIX_ENFORCE_NO_NATIVE='1'
 export NIX_ENFORCE_NO_NATIVE
 NIX_HARDENING_ENABLE='bindnow format fortify fortify3 pic relro stackprotector strictoverflow zerocallusedregs'
 export NIX_HARDENING_ENABLE
-NIX_LDFLAGS='-rpath /home/zak/school/s26/iproj/rotagotchi/outputs/out/lib '
+NIX_LDFLAGS='-rpath /home/zak/school/sp26/cs/rotagotchi/outputs/out/lib '
 export NIX_LDFLAGS
 NIX_NO_SELF_RPATH='1'
 NIX_STORE='/nix/store'
@@ -136,7 +136,7 @@ name='nix-shell-env'
 export name
 nativeBuildInputs='/nix/store/9i106xvqiljjgv0kl3pykgc3izswja8j-node2nix-1.11.0 /nix/store/i1jdnip70qb7yh4krlzsgyxs0zdvw7xv-nodejs-22.13.1 /nix/store/ihlqmjc0687gh6y5j3rm0li00xii5gk0-pnpm-10.4.0 /nix/store/7rq9j3ggh28nkszpssdsfaa85ixm1bk7-yarn-1.22.22 /nix/store/l8k71f81hdr03cvjrx4jd96gs5mzzjbl-playwright-core-1.50.1 /nix/store/jss0dgj7sgq49rgqhz2f8a1l58dam6dr-uv-0.6.0'
 export nativeBuildInputs
-out='/home/zak/school/s26/iproj/rotagotchi/outputs/out'
+out='/home/zak/school/sp26/cs/rotagotchi/outputs/out'
 export out
 outputBin='out'
 outputDev='out'
@@ -167,7 +167,7 @@ preConfigurePhases=' updateAutotoolsGnuConfigScriptsPhase'
 declare -a preFixupHooks=('_moveToShare' '_multioutDocs' '_multioutDevs' )
 preferLocalBuild='1'
 export preferLocalBuild
-prefix='/home/zak/school/s26/iproj/rotagotchi/outputs/out'
+prefix='/home/zak/school/sp26/cs/rotagotchi/outputs/out'
 declare -a propagatedBuildDepFiles=('propagated-build-build-deps' 'propagated-native-build-inputs' 'propagated-build-target-deps' )
 propagatedBuildInputs=''
 export propagatedBuildInputs
@@ -177,7 +177,9 @@ export propagatedNativeBuildInputs
 declare -a propagatedTargetDepFiles=('propagated-target-target-deps' )
 shell='/nix/store/fd118hwh7d1ncib4mdw56ylv3g9k0iyj-bash-5.2p37/bin/bash'
 export shell
-shellHook=''
+shellHook='uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+export PATH="$HOME/.local/bin:$PATH"
+'
 export shellHook
 stdenv='/nix/store/dh9szsq14j2w2dx7pn219n27gwq7w3dn-stdenv-linux'
 export stdenv
