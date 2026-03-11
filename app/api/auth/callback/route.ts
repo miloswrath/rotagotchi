@@ -56,13 +56,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // GitHub App user-to-server tokens expire in 8 hours; refresh tokens in 6 months.
+  // Supabase does not surface the expiry, so we derive it from documented defaults.
+  const now = Date.now();
+  const accessTokenExpiresAt = new Date(now + 8 * 60 * 60 * 1000);
+  const refreshTokenExpiresAt = new Date(now + 180 * 24 * 60 * 60 * 1000);
+
   try {
     await storeGitHubTokens(
       userId,
       providerToken,
       providerRefreshToken ?? null,
-      null,
-      null
+      accessTokenExpiresAt,
+      refreshTokenExpiresAt
     );
   } catch (err) {
     console.error("[auth/callback] Failed to store GitHub tokens:", err);

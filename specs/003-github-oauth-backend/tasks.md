@@ -34,7 +34,7 @@
 - [x] T007 [P] Write `supabase/migrations/002_webhook_installations.sql` — create `webhook_installations` table (columns: `id`, `user_id`, `installation_id` BIGINT UNIQUE, `account_login`, `account_type`, `access_all_repos`, `installed_at`, `suspended_at`), FK to `auth.users` ON DELETE CASCADE, enable RLS, add user-scoped policy
 - [x] T008 [P] Write `supabase/migrations/003_webhook_events.sql` — create `webhook_events` table (columns: `delivery_id` UUID PRIMARY KEY, `installation_id` BIGINT, `event_type` TEXT, `action` TEXT, `received_at` TIMESTAMPTZ DEFAULT now(), `payload` JSONB, `processed` BOOLEAN DEFAULT false), FK `installation_id` to `webhook_installations`, enable RLS, INSERT for service role only, SELECT for owner via installation join
 - [x] T009 [P] Write `supabase/migrations/004_commit_events.sql` — create `commit_events` table (columns: `id`, `delivery_id` UUID UNIQUE FK to `webhook_events`, `user_id` FK to `auth.users`, `repo_full_name`, `commit_sha`, `branch`, `diff_size` INT CHECK >= 0, `lines_added` INT, `lines_deleted` INT, `event_type`, `occurred_at`, `created_at`), with comment documenting `diff_size = lines_added + lines_deleted` per constitution, enable RLS, INSERT for service role only, SELECT for owner
-- [ ] T010 Apply all migrations via Supabase CLI (`supabase db push`) or Supabase dashboard SQL editor; verify all four tables exist with correct columns, constraints, and RLS policies enabled; configure GitHub OAuth provider in Supabase Auth dashboard (Client ID, Client Secret, Callback URL)
+- [x] T010 Apply all migrations via Supabase CLI (`supabase db push`) or Supabase dashboard SQL editor; verify all four tables exist with correct columns, constraints, and RLS policies enabled; configure GitHub OAuth provider in Supabase Auth dashboard (Client ID, Client Secret, Callback URL)
 
 **Checkpoint**: Supabase clients ready, all four tables exist with RLS — user story implementation can now begin.
 
@@ -80,7 +80,7 @@
 - [x] T022 [P] Add error logging to `app/api/webhooks/github/route.ts` and `app/api/auth/callback/route.ts` — log event type, delivery ID, and error message on any 4xx/5xx response path (no payload contents logged per constitution monitoring scope policy)
 - [x] T023 [P] Verify `.env.local.example` is complete and matches all variables referenced across `lib/github/auth.ts`, `lib/github/webhook.ts`, `lib/supabase/server.ts`, and both route handlers
 - [x] T024 Run `npm test && npm run lint` and fix all failing tests and lint errors
-- [ ] T025 Follow `quickstart.md` end-to-end in local dev environment using a smee.io tunnel: verify sign-in flow, webhook receipt, and a row appearing in `commit_events` after a real git push
+- [x] T025 Follow `quickstart.md` end-to-end in local dev environment using a smee.io tunnel: verify sign-in flow, webhook receipt, and a row appearing in `commit_events` after a real git push
 
 ---
 

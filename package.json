@@ -10,7 +10,9 @@
     "test:e2e": "playwright test --project=e2e",
     "test:e2e:nix": "LIBGBM_PATH=\"$(nix eval --raw nixpkgs#libgbm.outPath)/lib\" && LD_LIBRARY_PATH=\"$LIBGBM_PATH:$LD_LIBRARY_PATH\" playwright test --project=e2e",
     "test:smoke": "playwright test --project=smoke",
-    "test:unit": "vitest run tests/unit"
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
