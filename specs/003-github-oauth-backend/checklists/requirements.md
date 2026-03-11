@@ -31,4 +31,4 @@
 
 ## Notes
 
-All items pass on first validation. The spec references "GitHub" and "OAuth" as the external service and protocol that define the feature's scope — this is acceptable per guidelines as they describe WHAT the system integrates with, not HOW it is built. "Shared secret" (FR-004) and "push/subscription mechanism" (Assumptions) are kept intentionally vague to remain technology-agnostic.
+All items pass. Spec reworked to remove P3 (tamagotchi state updating) — that concern is explicitly noted in Assumptions as a downstream feature. The backend's responsibility now ends at persisting validated commit event records. Watch Session entity removed as it was primarily relevant to tamagotchi logic scoping.

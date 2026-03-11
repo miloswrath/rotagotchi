@@ -24,38 +24,22 @@ A new user opens the Rotagotchi extension and is prompted to sign in with their 
 
 ---
 
-### User Story 2 - Webhook Registration for Coding Activity (Priority: P2)
+### User Story 2 - Webhook Registration & Coding Event Ingestion (Priority: P2)
 
-After the user has authorized the extension, the system automatically registers a webhook with GitHub that will notify Rotagotchi whenever the user pushes commits or opens a pull request on any of their repositories.
+After the user has authorized the extension, the system automatically registers a webhook with GitHub that will notify Rotagotchi whenever the user pushes commits or opens a pull request on any of their repositories. The system receives, validates, and stores these events for downstream consumption.
 
-**Why this priority**: This is the mechanism that feeds all coding activity into the system. Without webhook registration, no tamagotchi state can ever update.
+**Why this priority**: This is the mechanism that captures all coding activity. Without webhook registration and event storage, no downstream tamagotchi logic can ever run.
 
-**Independent Test**: Can be fully tested by triggering the webhook registration flow and simulating a push event — delivers a verifiable data pipeline that confirms the system receives coding events.
+**Independent Test**: Can be fully tested by triggering the webhook registration flow, simulating a push event, and confirming the system receives, validates, and persists the event record — delivers a verifiable data pipeline with demonstrable value independent of any downstream consumer.
 
 **Acceptance Scenarios**:
 
 1. **Given** a user has signed in, **When** authorization completes, **Then** a webhook is registered for all of the user's repositories (including future ones)
 2. **Given** a registered webhook, **When** the user pushes commits to any repository, **Then** the system receives an event containing the diff size and the timestamp
 3. **Given** a registered webhook, **When** the user opens or merges a pull request, **Then** the system receives an event with relevant size and timestamp information
-4. **Given** a webhook event arrives, **When** the system processes it, **Then** it verifies the event is legitimately from GitHub before acting on it
-5. **Given** a user signs out or revokes access, **When** the system detects this, **Then** the webhook is deregistered and no further events are processed
-
----
-
-### User Story 3 - Coding Activity Feeds Tamagotchi State (Priority: P3)
-
-When a coding event is received and validated, the system converts the diff size and timing information into a tamagotchi reward (e.g., feeding the pet, restoring health), and the user sees their tamagotchi react in near real-time.
-
-**Why this priority**: This is the end-to-end user-facing outcome of the backend. It validates the full pipeline and delivers user delight, but depends on Stories 1 and 2 being complete first.
-
-**Independent Test**: Can be tested by simulating a verified webhook event and confirming the tamagotchi's state changes appropriately in the extension UI.
-
-**Acceptance Scenarios**:
-
-1. **Given** a validated coding event is received, **When** the system processes the diff size, **Then** a corresponding tamagotchi reward is computed and recorded
-2. **Given** a tamagotchi reward is computed, **When** the extension is open, **Then** the user sees their tamagotchi react within a few seconds of the push
-3. **Given** the user pushes a very large diff, **When** the system processes it, **Then** the tamagotchi reward is capped or scaled appropriately (no runaway state)
-4. **Given** the user pushes a near-empty commit (e.g., only whitespace changes), **When** the system processes it, **Then** a minimal or zero reward is granted
+4. **Given** a webhook event arrives, **When** the system processes it, **Then** it verifies the event is legitimately from GitHub before storing it
+5. **Given** a verified webhook event, **When** the system stores it, **Then** the diff size and timestamp are persisted and available for downstream systems to query
+6. **Given** a user signs out or revokes access, **When** the system detects this, **Then** the webhook is deregistered and no further events are accepted
 
 ---
 
@@ -76,37 +60,31 @@ When a coding event is received and validated, the system converts the diff size
 - **FR-002**: System MUST persist the user's authenticated session so they do not need to sign in on every extension open
 - **FR-003**: System MUST register a webhook with GitHub upon successful user authorization to receive push and pull request events across all user repositories
 - **FR-004**: System MUST verify the authenticity of every incoming webhook event using a shared secret before processing it
-- **FR-005**: System MUST extract the diff size and timestamp from each verified webhook event
-- **FR-006**: System MUST convert diff size and timestamp into a tamagotchi reward value and persist that reward record
-- **FR-007**: System MUST deliver the tamagotchi state update to the extension in near real-time after a coding event is processed
-- **FR-008**: System MUST deregister webhooks and invalidate user sessions when a user signs out or access is revoked
-- **FR-009**: System MUST store user identity, commit event records, and current avatar/tamagotchi state in persistent storage
-- **FR-010**: System MUST handle duplicate webhook deliveries idempotently (same event processed twice must not double-reward)
+- **FR-005**: System MUST extract the diff size and timestamp from each verified webhook event and persist them as a commit event record
+- **FR-006**: System MUST deregister webhooks and invalidate user sessions when a user signs out or access is revoked
+- **FR-007**: System MUST store user identity and commit event records in persistent storage accessible to downstream systems
+- **FR-008**: System MUST handle duplicate webhook deliveries idempotently (same event processed twice must not create duplicate records)
 
 ### Key Entities
 
-- **User**: A GitHub-authenticated individual; has an identity, OAuth token, and one associated tamagotchi
-- **Commit Event**: A single push or pull request event received from GitHub; contains diff size, timestamp, and originating repository
-- **Tamagotchi State**: The current condition of the user's virtual pet; updated based on accumulated coding activity
-- **Webhook Registration**: A record of the active GitHub webhook for a user; tracks registration status and secret
-- **Watch Session**: A time-bounded period during which the system monitors a user's activity (optional scoping unit for tamagotchi logic)
+- **User**: A GitHub-authenticated individual; has an identity, OAuth token, and associated activity history
+- **Commit Event**: A single push or pull request event received from GitHub; contains diff size, timestamp, and originating repository; consumed by downstream tamagotchi logic
+- **Webhook Registration**: A record of the active GitHub webhook for a user; tracks registration status and the shared secret used for signature verification
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: A new user can complete the GitHub sign-in and authorization flow in under 2 minutes on first use
-- **SC-002**: After a code push, the tamagotchi state update is visible in the extension within 5 seconds under normal network conditions
-- **SC-003**: The system correctly processes at least 99% of delivered webhook events without data loss
-- **SC-004**: Duplicate webhook events never result in duplicate rewards — idempotency holds in all tested scenarios
-- **SC-005**: Users who sign out or revoke access have their webhooks cleaned up within 60 seconds
-- **SC-006**: The system correctly rejects 100% of webhook events with invalid or missing signatures
+- **SC-002**: The system correctly stores at least 99% of delivered webhook events without data loss
+- **SC-003**: Duplicate webhook deliveries never produce duplicate event records — idempotency holds in all tested scenarios
+- **SC-004**: Users who sign out or revoke access have their webhooks cleaned up within 60 seconds
+- **SC-005**: The system correctly rejects 100% of webhook events with invalid or missing signatures
 
 ## Assumptions
 
 - GitHub's webhook infrastructure reliably retries failed deliveries; the system does not need to poll GitHub for missed events
-- Each user has exactly one tamagotchi; multi-pet or shared-pet scenarios are out of scope for this feature
-- The tamagotchi reward formula (diff size → reward value) will be defined separately; this feature only needs to store the raw diff size and timestamp
 - Repository access is granted broadly (all repos); per-repo granularity is not required
 - The extension is a Chrome extension communicating with the backend over a standard web protocol
-- Real-time delivery to the extension uses a push/subscription mechanism (not polling), though the specific protocol is a planning decision
+- Tamagotchi state updating and reward computation are handled by a separate downstream feature; this feature's responsibility ends at persisting validated commit event records
+- The format for exposing stored commit events to downstream consumers (e.g., query API, pub/sub) is a planning-phase decision
