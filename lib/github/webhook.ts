@@ -1,5 +1,54 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, createSign, timingSafeEqual } from "crypto";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+
+// ---------------------------------------------------------------------------
+// GitHub App authentication helpers
+// ---------------------------------------------------------------------------
+
+function createAppJWT(): string {
+  const now = Math.floor(Date.now() / 1000);
+  const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ iat: now - 60, exp: now + 600, iss: process.env.GITHUB_APP_ID })).toString("base64url");
+  const signingInput = `${header}.${payload}`;
+  const privateKey = (process.env.GITHUB_APP_PRIVATE_KEY ?? "").replace(/\\n/g, "\n");
+  const sign = createSign("RSA-SHA256");
+  sign.update(signingInput);
+  return `${signingInput}.${sign.sign(privateKey, "base64url")}`;
+}
+
+async function getInstallationToken(installationId: number): Promise<string> {
+  const resp = await fetch(
+    `https://api.github.com/app/installations/${installationId}/access_tokens`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${createAppJWT()}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    }
+  );
+  if (!resp.ok) throw new Error(`Failed to get installation token: ${resp.status}`);
+  const data = (await resp.json()) as { token: string };
+  return data.token;
+}
+
+async function fetchCommitStats(
+  repoFullName: string,
+  sha: string,
+  token: string
+): Promise<{ additions: number; deletions: number }> {
+  const resp = await fetch(`https://api.github.com/repos/${repoFullName}/commits/${sha}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  if (!resp.ok) return { additions: 0, deletions: 0 };
+  const data = (await resp.json()) as { stats?: { additions: number; deletions: number } };
+  return { additions: data.stats?.additions ?? 0, deletions: data.stats?.deletions ?? 0 };
+}
 
 /**
  * Verifies a GitHub webhook signature using HMAC-SHA256.
@@ -41,10 +90,7 @@ interface PushPayload {
   ref: string;
   head_commit?: { id: string; timestamp: string };
   commits?: Array<{
-    stats?: { additions: number; deletions: number };
-    added?: string[];
-    removed?: string[];
-    modified?: string[];
+    id: string;
   }>;
   // GitHub also provides top-level stats in some webhook formats
   // We aggregate per-commit when available, fall back to 0
@@ -103,14 +149,17 @@ export async function processWebhookEvent(
       .eq("installation_id", installationId)
       .single();
 
-    if (!install) return;
+    if (!install?.user_id) return;
 
-    // Aggregate additions + deletions across all commits in the push
+    // Fetch diff stats from GitHub API (not included in push webhook payload)
+    const token = await getInstallationToken(installationId);
     let linesAdded = 0;
     let linesDeleted = 0;
     for (const commit of push.commits ?? []) {
-      linesAdded += commit.stats?.additions ?? 0;
-      linesDeleted += commit.stats?.deletions ?? 0;
+      if (!commit.id) continue;
+      const stats = await fetchCommitStats(push.repository.full_name, commit.id, token);
+      linesAdded += stats.additions;
+      linesDeleted += stats.deletions;
     }
 
     const diffSize = linesAdded + linesDeleted;
