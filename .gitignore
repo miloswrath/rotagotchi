@@ -1,5 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
+*.pem
 .direnv/
 # dependencies
 /node_modules
@@ -39,6 +39,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# supabase
+supabase/.temp/
 
 # typescript
 *.tsbuildinfo
