@@ -49,26 +49,20 @@ export async function GET(request: NextRequest) {
   const providerToken = session.provider_token;
   const providerRefreshToken = session.provider_refresh_token;
 
-  if (!providerToken || !providerRefreshToken) {
-    console.error("[auth/callback] Missing provider tokens for user", userId);
+  if (!providerToken) {
+    console.error("[auth/callback] Missing provider token for user", userId);
     return NextResponse.redirect(
       new URL("/?auth=error&reason=missing_provider_tokens", request.url)
     );
   }
 
-  // GitHub App user-to-server tokens expire in 8 hours; refresh tokens in 6 months
-  const accessTokenExpiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000);
-  const refreshTokenExpiresAt = new Date(
-    Date.now() + 6 * 30 * 24 * 60 * 60 * 1000
-  );
-
   try {
     await storeGitHubTokens(
       userId,
       providerToken,
-      providerRefreshToken,
-      accessTokenExpiresAt,
-      refreshTokenExpiresAt
+      providerRefreshToken ?? null,
+      null,
+      null
     );
   } catch (err) {
     console.error("[auth/callback] Failed to store GitHub tokens:", err);
@@ -77,8 +71,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Check if the user has a GitHub App installation
   const serviceClient = createServiceRoleClient();
+  const githubLogin = session.user.user_metadata?.user_name as string | undefined;
+
+  // Link any unlinked installation matching this GitHub account to the user
+  if (githubLogin) {
+    await serviceClient
+      .from("webhook_installations")
+      .update({ user_id: userId })
+      .eq("account_login", githubLogin)
+      .is("user_id", null);
+  }
+
+  // Check if the user has a GitHub App installation
   const { data: installation } = await serviceClient
     .from("webhook_installations")
     .select("id")
@@ -87,7 +92,6 @@ export async function GET(request: NextRequest) {
     .single();
 
   if (!installation) {
-    // Redirect to GitHub App installation page
     return NextResponse.redirect(GITHUB_APP_INSTALL_URL);
   }
 

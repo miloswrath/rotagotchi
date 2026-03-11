@@ -16,7 +16,7 @@
 
 1. Go to GitHub → Settings → Developer settings → GitHub Apps → New GitHub App
 2. Set the following:
-   - **Callback URL**: `http://localhost:3000/api/auth/callback` (update for production)
+   - **Callback URL**: `https://<project-ref>.supabase.co/auth/v1/callback` (Supabase handles state verification, then forwards to your app)
    - **Webhook URL**: `http://localhost:3000/api/webhooks/github` (use a tunnel like ngrok for local dev)
    - **Webhook secret**: generate a random secret and save it
    - **Permissions**: Repository → Contents (Read-only), Metadata (Read-only)
@@ -75,7 +75,7 @@ Use [smee.io](https://smee.io) or ngrok to expose your local server to GitHub:
 
 ```bash
 # Using smee-client
-npx smee --url https://smee.io/<your-channel> --target http://localhost:3000/api/webhooks/github
+pnpm dlx smee-client --url https://smee.io/<your-channel> --target http://localhost:3000/api/webhooks/github
 ```
 
 Update the GitHub App's Webhook URL to the smee/ngrok URL. Push a commit to any repo where the app is installed and verify a row appears in `webhook_events`.

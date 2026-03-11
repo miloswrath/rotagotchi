@@ -10,9 +10,9 @@ const GITHUB_TOKEN_ENDPOINT = "https://github.com/login/oauth/access_token";
 export async function storeGitHubTokens(
   userId: string,
   accessToken: string,
-  refreshToken: string,
-  accessTokenExpiresAt: Date,
-  refreshTokenExpiresAt: Date
+  refreshToken: string | null,
+  accessTokenExpiresAt: Date | null,
+  refreshTokenExpiresAt: Date | null
 ): Promise<void> {
   const supabase = createServiceRoleClient();
   const { error } = await supabase.from("user_github_tokens").upsert(
@@ -20,8 +20,8 @@ export async function storeGitHubTokens(
       user_id: userId,
       access_token: accessToken,
       refresh_token: refreshToken,
-      access_token_expires_at: accessTokenExpiresAt.toISOString(),
-      refresh_token_expires_at: refreshTokenExpiresAt.toISOString(),
+      access_token_expires_at: accessTokenExpiresAt?.toISOString() ?? null,
+      refresh_token_expires_at: refreshTokenExpiresAt?.toISOString() ?? null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" }
@@ -50,6 +50,10 @@ export async function refreshGitHubTokenIfNeeded(
 
   if (error || !data) {
     throw new Error(`No GitHub tokens found for user ${userId}`);
+  }
+
+  if (!data.access_token_expires_at) {
+    return; // OAuth App tokens don't expire
   }
 
   const expiresAt = new Date(data.access_token_expires_at);

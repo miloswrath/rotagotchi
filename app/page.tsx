@@ -26,7 +26,7 @@ export default function Home() {
       provider: "github",
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback`,
-        scopes: "read:user",
+        scopes: "read:user user:email",
       },
     });
   }
