@@ -1,4 +1,4 @@
-# Feature -> {}
+# Feature -> {Unproductive Content Whitelist}
 
 ---
 
@@ -6,11 +6,9 @@
 
 ---
 
--white list unproductive websites (instagram reels, youtube, etc.)
-
-**_Here you insert bullet points for the things that this needs to get done_**
-
-### DELETE THIS!!
+- Create a JSON-based whitelist.json that stores domains classified as "unproductive/degenerative" (e.g youtube.com., instagram.com)
+- Write a utility function isUnproductive(url) that checks if a given URL is in that list.
+- Ensure the matching logic handles subdomains (e.g., m.youtube.com should be considereed youtube.com)
 
 After the above run the following with this file and constitution.md loaded into AI context:
 
