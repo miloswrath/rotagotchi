@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Extension build output:
+    "extension/dist/**",
+    // Extension build script:
+    "scripts/**",
   ]),
   // Test files are not React components — disable React-specific rules.
   {
