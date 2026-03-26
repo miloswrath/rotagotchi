@@ -2,31 +2,205 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rotagotchi</title>
     <style>
-      body {
-        margin: 0;
-        padding: 12px;
-        min-width: 260px;
-        font-family: Arial, Helvetica, sans-serif;
+      :root {
+        --screen-size: 256px;
+        --pad: 16px;
+        --popup-w: calc(var(--screen-size) + var(--pad) * 2);
+        --bg:        #080a0c;
+        --bezel:     #101418;
+        --screen-bg: #050708;
+        --rim:       #1a1f24;
+        --glow:      #22c55e;
+        --glow-dim:  #16a34a;
+        --text-dim:  #3a4a3a;
+        --text-muted:#5a7a5a;
       }
 
-      h1 {
-        margin: 0 0 8px;
-        font-size: 16px;
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        width: var(--popup-w);
+        background: var(--bg);
+        overflow: hidden;
+        font-family: ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace;
       }
 
-      p {
-        margin: 0;
-        color: #444;
-        font-size: 13px;
+      /* ── Header ── */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px var(--pad) 8px;
+        border-bottom: 1px solid var(--rim);
+        background: var(--bezel);
+      }
+
+      .wordmark {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--glow);
+        text-shadow: 0 0 8px color-mix(in srgb, var(--glow) 50%, transparent);
+      }
+
+      .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      /* Three tiny orbs — tamagotchi button aesthetic */
+      .orb {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--text-dim);
+      }
+      .orb.live {
+        background: var(--glow);
+        box-shadow: 0 0 5px var(--glow-dim);
+        animation: breathe 2.8s ease-in-out infinite;
+      }
+
+      @keyframes breathe {
+        0%, 100% { opacity: 1;   box-shadow: 0 0 6px var(--glow-dim); }
+        50%       { opacity: 0.4; box-shadow: 0 0 2px transparent;     }
+      }
+
+      /* ── Screen frame ── */
+      .screen-wrap {
+        padding: var(--pad);
+        background: var(--bezel);
+        position: relative;
+      }
+
+      /* Outer rim — inset shadow gives a recessed look */
+      .screen-rim {
+        border-radius: 6px;
+        padding: 3px;
+        background: linear-gradient(145deg, #0d1012, #1c2126);
+        box-shadow:
+          inset 0 2px 4px rgba(0,0,0,0.8),
+          inset 0 -1px 2px rgba(255,255,255,0.03),
+          0 1px 0 rgba(255,255,255,0.04);
+      }
+
+      /* The actual "glass" panel */
+      .screen-glass {
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        background: var(--screen-bg);
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+      }
+
+      /* Scanline overlay — CSS-only CRT effect */
+      .screen-glass::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent,
+          transparent 1px,
+          rgba(0, 0, 0, 0.18) 1px,
+          rgba(0, 0, 0, 0.18) 2px
+        );
+        pointer-events: none;
+        z-index: 10;
+        border-radius: 4px;
+      }
+
+      /* Subtle green phosphor tint at top */
+      .screen-glass::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 40%;
+        background: linear-gradient(
+          to bottom,
+          rgba(34, 197, 94, 0.03),
+          transparent
+        );
+        pointer-events: none;
+        z-index: 9;
+      }
+
+      #pet-container {
+        display: block;
+        width: var(--screen-size);
+        height: var(--screen-size);
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ── Footer ── */
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px var(--pad) 8px;
+        border-top: 1px solid var(--rim);
+        background: var(--bezel);
+      }
+
+      .status-label {
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      /* Tiny blinking cursor — "alive" feel */
+      .cursor {
+        display: inline-block;
+        width: 5px;
+        height: 9px;
+        background: var(--glow);
+        vertical-align: middle;
+        margin-left: 4px;
+        opacity: 0;
+        animation: blink 1.1s step-end infinite;
+      }
+
+      @keyframes blink {
+        0%, 100% { opacity: 0; }
+        50%       { opacity: 0.7; }
+      }
+
+      .build-tag {
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
       }
     </style>
   </head>
   <body>
-    <h1>Rotagotchi Extension</h1>
-    <p id="status">Ready for development.</p>
-    <script src="popup.js"></script>
+    <div class="header">
+      <span class="wordmark">Rotagotchi</span>
+      <div class="indicators">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb live" title="active"></div>
+      </div>
+    </div>
+
+    <div class="screen-wrap">
+      <div class="screen-rim">
+        <div class="screen-glass">
+          <div id="pet-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span class="status-label">watching<span class="cursor"></span></span>
+      <span class="build-tag">v0.1</span>
+    </div>
+
+    <script src="dist/popup.js"></script>
   </body>
 </html>

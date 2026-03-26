@@ -25,6 +25,9 @@
 # production
 /build
 
+# extension build output
+/extension/dist/
+
 # misc
 .DS_Store
 *.pem
