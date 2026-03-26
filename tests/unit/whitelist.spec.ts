@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 describe("whitelist.json", () => {
-  const whitelistPath = path.resolve(__dirname, "../../lib/whitelist.json");
+  //const whitelistPath = path.resolve(__dirname, "../../lib/whitelist.json");
   const whitelist: string[] = JSON.parse(
     fs.readFileSync(whitelistPath, "utf-8")
   );
