@@ -49,4 +49,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: pnpm test:e2e
+        # xvfb-run provides a virtual display so Chrome extensions load
+        # correctly with headless:false (extensions don't work in true
+        # headless mode; --headless=new is also unreliable on Linux CI).
+        run: xvfb-run pnpm test:e2e

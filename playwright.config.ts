@@ -10,11 +10,22 @@ const extensionArgs = [
 
 export default defineConfig({
   testDir: './tests',
+  // Persistent contexts + extensions are more fragile under parallelism; run
+  // serially on CI to avoid race conditions and resource contention.
+  workers: process.env.CI ? 1 : undefined,
+  // Must exceed the fixture's 120 s waitForEvent timeout so the test harness
+  // doesn't kill fixture setup before the service worker registers.
+  timeout: 150_000,
   use: {
-    channel: 'chromium',
-    headless: !!process.env.CI,
+    // No `channel` — use Playwright's bundled Chromium installed via
+    // `playwright install chromium` (system Chromium is absent on CI).
+    // Extensions require headless:false; CI provides a display via xvfb-run.
+    headless: false,
     launchOptions: {
-      args: extensionArgs,
+      args: [
+        ...extensionArgs,
+        '--disable-setuid-sandbox',
+      ],
     },
   },
   projects: [

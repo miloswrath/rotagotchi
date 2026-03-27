@@ -11,10 +11,11 @@ test('extension popup renders animation container', async ({ context, extensionI
 test('popup shows idle animation on neutral tab (github.com)', async ({ context, extensionId }) => {
   // Navigate to a non-blacklisted site first so background classifies it.
   const tabPage = await context.newPage();
-  await tabPage.goto('https://github.com');
+  await tabPage.goto('https://github.com', { waitUntil: 'domcontentloaded' });
 
-  // Give the background service worker time to classify and write tabState.
-  await tabPage.waitForTimeout(1000);
+  // Give the background service worker time to classify and write tabState
+  // after the navigation event fires.
+  await tabPage.waitForTimeout(2000);
 
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extensionId}/popup.html`);
@@ -26,9 +27,9 @@ test('popup shows idle animation on neutral tab (github.com)', async ({ context,
 
 test('popup shows angry animation on degenerative tab (youtube.com)', async ({ context, extensionId }) => {
   const tabPage = await context.newPage();
-  await tabPage.goto('https://www.youtube.com');
+  await tabPage.goto('https://www.youtube.com', { waitUntil: 'domcontentloaded' });
 
-  await tabPage.waitForTimeout(1000);
+  await tabPage.waitForTimeout(2000);
 
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extensionId}/popup.html`);
