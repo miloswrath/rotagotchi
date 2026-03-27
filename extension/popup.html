@@ -27,6 +27,9 @@
         font-family: ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace;
       }
 
+      /* ── Screen visibility ── */
+      .screen-hidden { display: none !important; }
+
       /* ── Header ── */
       .header {
         display: flex;
@@ -137,6 +140,83 @@
         z-index: 1;
       }
 
+      /* ── Login screen overlay (T010) ── */
+      #screen-login {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--screen-bg);
+        gap: 14px;
+        padding: var(--pad);
+      }
+
+      .login-title {
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      #btn-signin {
+        font-family: inherit;
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--glow);
+        background: transparent;
+        border: 1px solid var(--glow-dim);
+        border-radius: 3px;
+        padding: 8px 16px;
+        cursor: pointer;
+        text-shadow: 0 0 8px color-mix(in srgb, var(--glow) 40%, transparent);
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      #btn-signin:hover {
+        border-color: var(--glow);
+        box-shadow: 0 0 10px color-mix(in srgb, var(--glow) 25%, transparent);
+      }
+      #btn-signin:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #login-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #error-msg {
+        font-size: 8px;
+        color: #f87171;
+        text-align: center;
+        letter-spacing: 0.1em;
+        line-height: 1.5;
+        max-width: 200px;
+      }
+
+      #btn-retry {
+        font-family: inherit;
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid var(--rim);
+        border-radius: 3px;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      #btn-retry:hover { border-color: var(--text-muted); }
+
       /* ── Footer ── */
       .footer {
         display: flex;
@@ -145,6 +225,7 @@
         padding: 7px var(--pad) 8px;
         border-top: 1px solid var(--rim);
         background: var(--bezel);
+        min-height: 32px;
       }
 
       .status-label {
@@ -171,6 +252,45 @@
         50%       { opacity: 0.7; }
       }
 
+      /* ── Connection badge (T016 + T017) ── */
+      #connection-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .badge-connected,
+      .badge-disconnected {
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .badge-connected {
+        color: var(--glow);
+        text-shadow: 0 0 6px color-mix(in srgb, var(--glow) 40%, transparent);
+      }
+
+      .badge-disconnected {
+        color: #d97706;
+        cursor: pointer;
+      }
+      .badge-disconnected:hover { text-decoration: underline; }
+
+      /* ── Sign-out button ── */
+      #btn-signout {
+        font-family: inherit;
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 2px 4px;
+      }
+      #btn-signout:hover { color: var(--text-muted); }
+
       .build-tag {
         font-size: 9px;
         letter-spacing: 0.1em;
@@ -191,13 +311,35 @@
     <div class="screen-wrap">
       <div class="screen-rim">
         <div class="screen-glass">
+          <!-- Tamagotchi animation — shown on intro and main screens -->
           <div id="pet-container"></div>
+
+          <!-- Login screen overlay (T010) — hidden until no session detected -->
+          <section id="screen-login" class="screen-hidden">
+            <p class="login-title">connect your<br>github account</p>
+            <button id="btn-signin">Sign in with GitHub</button>
+            <div id="login-error" class="screen-hidden">
+              <p id="error-msg"></p>
+              <button id="btn-retry">Try again</button>
+            </div>
+          </section>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <span class="status-label">watching<span class="cursor"></span></span>
+      <!-- Intro screen: "watching" label (T011) -->
+      <span class="status-label" id="status-label">watching<span class="cursor"></span></span>
+
+      <!-- Main screen: connection badge (T016) -->
+      <div id="connection-badge" class="screen-hidden">
+        <span class="badge-connected screen-hidden">&#9679; Connected</span>
+        <span class="badge-disconnected screen-hidden">&#9679; Disconnected</span>
+      </div>
+
+      <!-- Main screen: sign-out button (T021) -->
+      <button id="btn-signout" class="screen-hidden">Sign out</button>
+
       <span class="build-tag">v0.1</span>
     </div>
 

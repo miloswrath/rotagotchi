@@ -1,4 +1,5 @@
 import { classify } from './classify';
+import { getValidSession } from './auth';
 
 /** Default degenerative-content domains (seeded from lib/whitelist.json). */
 const DEFAULT_BLACKLIST = [
@@ -8,6 +9,18 @@ const DEFAULT_BLACKLIST = [
   'tiktok.com',
   'twitter.com',
 ];
+
+// ─── T023: Startup — proactive token refresh ─────────────────────────────────
+// Refresh an expiring session in the background when Chrome starts so the
+// popup never has to wait for a refresh when first opened.
+
+chrome.runtime.onStartup.addListener(async () => {
+  try {
+    await getValidSession();
+  } catch {
+    // Non-fatal — popup will handle expired sessions on next open.
+  }
+});
 
 // ─── Install / Update ────────────────────────────────────────────────────────
 
