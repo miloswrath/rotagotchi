@@ -11,13 +11,19 @@ const extensionArgs = [
   `--disable-extensions-except=${pathToExtension}`,
   `--load-extension=${pathToExtension}`,
   '--no-sandbox',
+  '--disable-setuid-sandbox',
+  // Extensions are unsupported in legacy headless mode; use the new headless
+  // implementation on CI so the service worker and popup load correctly.
+  ...(process.env.CI ? ['--headless=new'] : []),
 ];
 
 export const test = base.extend<ExtensionFixtures>({
   context: async ({}, use) => {
     const context = await chromium.launchPersistentContext('', {
-      channel: 'chromium',
-      headless: !!process.env.CI,
+      // No `channel` — use Playwright's bundled Chromium (installed via
+      // `playwright install chromium`).  Specifying channel:'chromium' looks
+      // for a system binary that is not present on ubuntu-latest runners.
+      headless: false, // controlled via --headless=new arg above instead
       args: extensionArgs,
     });
     await use(context);

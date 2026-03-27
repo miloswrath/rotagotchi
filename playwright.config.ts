@@ -11,10 +11,16 @@ const extensionArgs = [
 export default defineConfig({
   testDir: './tests',
   use: {
-    channel: 'chromium',
-    headless: !!process.env.CI,
+    // No `channel` — use Playwright's bundled Chromium installed via
+    // `playwright install chromium` (system Chromium is absent on CI).
+    // Extensions break in legacy headless; pass --headless=new on CI instead.
+    headless: false,
     launchOptions: {
-      args: extensionArgs,
+      args: [
+        ...extensionArgs,
+        '--disable-setuid-sandbox',
+        ...(process.env.CI ? ['--headless=new'] : []),
+      ],
     },
   },
   projects: [
