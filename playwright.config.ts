@@ -10,6 +10,9 @@ const extensionArgs = [
 
 export default defineConfig({
   testDir: './tests',
+  // Persistent contexts + extensions are more fragile under parallelism; run
+  // serially on CI to avoid race conditions and resource contention.
+  workers: process.env.CI ? 1 : undefined,
   use: {
     // No `channel` — use Playwright's bundled Chromium installed via
     // `playwright install chromium` (system Chromium is absent on CI).
