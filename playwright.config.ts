@@ -13,16 +13,18 @@ export default defineConfig({
   // Persistent contexts + extensions are more fragile under parallelism; run
   // serially on CI to avoid race conditions and resource contention.
   workers: process.env.CI ? 1 : undefined,
+  // Must exceed the fixture's 120 s waitForEvent timeout so the test harness
+  // doesn't kill fixture setup before the service worker registers.
+  timeout: 150_000,
   use: {
     // No `channel` — use Playwright's bundled Chromium installed via
     // `playwright install chromium` (system Chromium is absent on CI).
-    // Extensions break in legacy headless; pass --headless=new on CI instead.
+    // Extensions require headless:false; CI provides a display via xvfb-run.
     headless: false,
     launchOptions: {
       args: [
         ...extensionArgs,
         '--disable-setuid-sandbox',
-        ...(process.env.CI ? ['--headless=new'] : []),
       ],
     },
   },

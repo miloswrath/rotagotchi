@@ -12,9 +12,6 @@ const extensionArgs = [
   `--load-extension=${pathToExtension}`,
   '--no-sandbox',
   '--disable-setuid-sandbox',
-  // Extensions are unsupported in legacy headless mode; use the new headless
-  // implementation on CI so the service worker and popup load correctly.
-  ...(process.env.CI ? ['--headless=new'] : []),
 ];
 
 export const test = base.extend<ExtensionFixtures>({
@@ -23,7 +20,7 @@ export const test = base.extend<ExtensionFixtures>({
       // No `channel` — use Playwright's bundled Chromium (installed via
       // `playwright install chromium`).  Specifying channel:'chromium' looks
       // for a system binary that is not present on ubuntu-latest runners.
-      headless: false, // controlled via --headless=new arg above instead
+      headless: false, // CI provides a display via xvfb-run; extensions need a real window context
       args: extensionArgs,
     });
 
