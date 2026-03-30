@@ -31,13 +31,23 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 // Supabase's internal session storage is used only for the PKCE code verifier
 // during the OAuth dance — both signInWithOAuth and exchangeCodeForSession
 // happen in the same popup context so localStorage is sufficient.
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
-  },
-});
+//
+// Lazy initialization prevents a module-level crash when the extension is
+// built without .env.local (empty SUPABASE_URL throws "supabaseUrl is required"
+// inside createClient, which would crash the popup IIFE before DOMContentLoaded).
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase(): ReturnType<typeof createClient> {
+  if (!_supabase) {
+    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+  return _supabase;
+}
 
 const SESSION_KEY = 'authSession';
 const REFRESH_THRESHOLD_SECONDS = 5 * 60; // refresh if expiry is within 5 min
@@ -82,7 +92,7 @@ export async function launchOAuthFlow(): Promise<StoredAuthSession> {
   // Supabase generates the OAuth URL including the PKCE code challenge.
   // skipBrowserRedirect prevents Supabase from navigating the tab; we drive
   // the flow ourselves via chrome.identity.launchWebAuthFlow.
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await getSupabase().auth.signInWithOAuth({
     provider: 'github',
     options: {
       redirectTo: redirectUrl,
@@ -115,7 +125,7 @@ export async function launchOAuthFlow(): Promise<StoredAuthSession> {
   const code = parsedUrl.searchParams.get('code');
   if (code) {
     const { data: exchangeData, error: exchangeError } =
-      await supabase.auth.exchangeCodeForSession(code);
+      await getSupabase().auth.exchangeCodeForSession(code);
     if (exchangeError || !exchangeData.session) {
       throw new Error(exchangeError?.message ?? 'Failed to exchange code for session');
     }
@@ -131,7 +141,7 @@ export async function launchOAuthFlow(): Promise<StoredAuthSession> {
   const refreshToken = hashParams.get('refresh_token');
   if (accessToken && refreshToken) {
     const { data: sessionData, error: sessionError } =
-      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      await getSupabase().auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
     if (sessionError || !sessionData.session) {
       throw new Error(sessionError?.message ?? 'Failed to set session from tokens');
     }
@@ -156,7 +166,7 @@ export async function getValidSession(): Promise<StoredAuthSession | null> {
 
   // Access token is near expiry — attempt a silent refresh.
   try {
-    const { data, error } = await supabase.auth.refreshSession({
+    const { data, error } = await getSupabase().auth.refreshSession({
       refresh_token: session.refreshToken,
     });
     if (error || !data.session) {
@@ -178,7 +188,7 @@ export async function getValidSession(): Promise<StoredAuthSession | null> {
 
 export async function signOut(): Promise<void> {
   try {
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
   } catch {
     // Best-effort server invalidation; always clear local state.
   }

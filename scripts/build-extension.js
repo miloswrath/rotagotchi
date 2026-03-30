@@ -71,6 +71,14 @@ async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? localEnv.NEXT_PUBLIC_SUPABASE_URL ?? '';
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? localEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn(
+      '\n⚠️  WARNING: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing.\n' +
+      '   The extension will crash at startup (blank popup, broken service worker).\n' +
+      '   Create .env.local with both variables before building.\n'
+    );
+  }
+
   await build({
     entryPoints,
     bundle: true,

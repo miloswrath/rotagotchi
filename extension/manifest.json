@@ -3,6 +3,7 @@
   "name": "Rotagotchi Dev Extension",
   "version": "0.1.0",
   "description": "Basic development scaffold for the Rotagotchi Chrome extension.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAskU7a8ygo7KIKTV+ecBLyiDQ/yU9OOmjs4u/WuvA+EI+qLrFgqbM+Gx7/DkNkcXSKmjre1XC/sQFtZWhq2wKqdSfkQeSHGawP5VjLXEU7izDunHWeCn+W+VkaKAZ7IQ1+kWF4jrEElwdoyS2TzK149AIfYWt6h1odUKxk74aX6YVYZtrkhXLygB04D8ilLLU1nW3MuDEvVNbAkIqhOaP9vG51o8XG9SLySvaaSVWlEVGwOymwenKYuR2ciqEfgeqz8q/9ET0JVVT5SrZI4LPUJrYO+L+wENlrhFB2WQq5iyxLs+6hQFdAtCD8bvHn+i57I3obGZkfvf4X28cdK2rQQIDAQAB",
   "action": {
     "default_title": "Rotagotchi",
     "default_popup": "popup.html"
