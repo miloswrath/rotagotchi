@@ -1,0 +1,13 @@
+{
+  "buildCommand": "next build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "GITHUB_WEBHOOK_SECRET": "@github_webhook_secret",
+    "GITHUB_APP_ID": "@github_app_id",
+    "GITHUB_APP_PRIVATE_KEY": "@github_app_private_key"
+  }
+}
