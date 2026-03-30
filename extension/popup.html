@@ -296,6 +296,130 @@
         letter-spacing: 0.1em;
         color: var(--text-dim);
       }
+
+      /* ── Health bar ── */
+      #health-bar-container {
+        width: 100%;
+        height: 6px;
+        background: #111;
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 6px 0 2px;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+      }
+      #health-bar {
+        height: 100%;
+        background: var(--glow);
+        border-radius: 3px;
+        transition: width 0.4s ease, background 0.4s ease;
+      }
+      #health-bar.low { background: #f59e0b; }
+      #health-bar.critical { background: #ef4444; }
+
+      #health-label {
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      /* ── Status indicator ── */
+      #status-indicator {
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 2px 0;
+      }
+      #status-indicator.status-healthy { color: var(--glow); }
+      #status-indicator.status-hungry  { color: #f59e0b; }
+      #status-indicator.status-dead    { color: #ef4444; }
+
+      /* ── Speech bubble ── */
+      #speech-bubble {
+        font-size: 8px;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 4px 8px;
+        border: 1px solid var(--rim);
+        border-radius: 4px;
+        margin: 4px var(--pad);
+        background: rgba(0,0,0,0.3);
+        min-height: 20px;
+      }
+
+      /* ── Death overlay ── */
+      #death-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 25;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 7, 8, 0.92);
+        gap: 12px;
+        padding: var(--pad);
+      }
+      #death-message {
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #ef4444;
+        text-align: center;
+        line-height: 1.6;
+      }
+      #restart-btn {
+        font-family: inherit;
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--glow);
+        background: transparent;
+        border: 1px solid var(--glow-dim);
+        border-radius: 3px;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+      #restart-btn:hover {
+        border-color: var(--glow);
+        box-shadow: 0 0 10px color-mix(in srgb, var(--glow) 25%, transparent);
+      }
+
+      /* ── Settings panel ── */
+      #settings-panel {
+        padding: 6px var(--pad);
+        border-top: 1px solid var(--rim);
+        background: var(--bezel);
+      }
+      #settings-panel label {
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      #tick-slider {
+        width: 100%;
+        margin: 4px 0;
+        accent-color: var(--glow);
+      }
+      #tick-label {
+        font-size: 8px;
+        color: var(--text-dim);
+      }
+      #settings-btn {
+        font-family: inherit;
+        font-size: 10px;
+        color: var(--text-dim);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 2px 4px;
+      }
+      #settings-btn:hover { color: var(--text-muted); }
     </style>
   </head>
   <body>
@@ -314,6 +438,12 @@
           <!-- Tamagotchi animation — shown on intro and main screens -->
           <div id="pet-container"></div>
 
+          <!-- Death overlay — shown when tamagotchi is dead -->
+          <div id="death-overlay" style="display:none">
+            <div id="death-message">I died because you kept working.</div>
+            <button id="restart-btn">Restart</button>
+          </div>
+
           <!-- Login screen overlay (T010) — hidden until no session detected -->
           <section id="screen-login" class="screen-hidden">
             <p class="login-title">connect your<br>github account</p>
@@ -325,6 +455,25 @@
           </section>
         </div>
       </div>
+    </div>
+
+    <!-- Game status bar -->
+    <div id="game-status" class="screen-hidden" style="padding: 0 var(--pad);">
+      <div id="health-bar-container">
+        <div id="health-bar" style="width: 100%"></div>
+      </div>
+      <div id="health-label">HP: 100</div>
+      <div id="status-indicator" class="status-healthy">SATIATED</div>
+    </div>
+
+    <!-- Speech bubble -->
+    <div id="speech-bubble" class="screen-hidden">I'm doing great! Keep slacking.</div>
+
+    <!-- Settings panel -->
+    <div id="settings-panel" style="display:none">
+      <label>Tick Speed</label>
+      <input type="range" id="tick-slider" min="500" max="60000" step="500" value="60000">
+      <span id="tick-label">60s</span>
     </div>
 
     <div class="footer">
@@ -339,6 +488,8 @@
 
       <!-- Main screen: sign-out button (T021) -->
       <button id="btn-signout" class="screen-hidden">Sign out</button>
+
+      <button id="settings-btn" class="screen-hidden" title="Settings">&#9881;</button>
 
       <span class="build-tag">v0.1</span>
     </div>

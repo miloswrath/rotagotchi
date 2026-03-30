@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature, processWebhookEvent, handleInstallationEvent } from "@/lib/github/webhook";
 import { createServiceRoleClient } from "@/lib/supabase/server";
@@ -94,17 +95,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, duplicate: true });
   }
 
-  // 6. Process push and pull_request events asynchronously
+  // 6. Process push and pull_request events after response is sent
   if (eventType === "push" || eventType === "pull_request") {
-    // Fire-and-forget — respond 200 immediately, process in background
-    // Railway persistent container keeps the process alive for this
-    processWebhookEvent(deliveryId, eventType, payload).catch((err) => {
-      console.error("[webhooks/github] Event processing failed", {
-        deliveryId,
-        eventType,
-        error: String(err),
-      });
-    });
+    after(() =>
+      processWebhookEvent(deliveryId, eventType, payload).catch((err) => {
+        console.error("[webhooks/github] Event processing failed", {
+          deliveryId,
+          eventType,
+          error: String(err),
+        });
+      })
+    );
   }
 
   return NextResponse.json({ ok: true });
