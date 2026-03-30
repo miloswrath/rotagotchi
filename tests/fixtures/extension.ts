@@ -1,4 +1,4 @@
-import { test as base, chromium, type BrowserContext } from '@playwright/test';
+import { test as base, chromium, type BrowserContext, type Worker } from '@playwright/test';
 import path from 'path';
 
 export type ExtensionFixtures = {
@@ -41,7 +41,7 @@ export const test = base.extend<ExtensionFixtures>({
     const timeout = process.env.CI ? 120_000 : 30_000;
 
     // MV3: look for the background service worker.
-    let worker = context.serviceWorkers()[0];
+    let worker: Worker | undefined = context.serviceWorkers()[0];
     if (!worker) {
       try {
         worker = await context.waitForEvent('serviceworker', { timeout });
