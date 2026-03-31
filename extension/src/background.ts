@@ -12,6 +12,15 @@ import {
 } from './game';
 import { fireNotification } from './notifications';
 
+function scheduleGameTick(tickIntervalMs: number): void {
+  if (tickIntervalMs < 60_000) {
+    // Periodic alarms have a 1-min minimum; use a chained one-shot alarm instead.
+    chrome.alarms.create('game-tick', { when: Date.now() + tickIntervalMs });
+  } else {
+    chrome.alarms.create('game-tick', { periodInMinutes: tickIntervalMs / 60_000 });
+  }
+}
+
 /** Default degenerative-content domains (seeded from lib/whitelist.json). */
 const DEFAULT_BLACKLIST = [
   'youtube.com',
@@ -48,9 +57,7 @@ async function ensureGameTickAlarm(): Promise<void> {
   const existing = await chrome.alarms.get('game-tick');
   if (!existing) {
     const gameState = await readGameState();
-    chrome.alarms.create('game-tick', {
-      periodInMinutes: gameState.tickIntervalMs / 60_000,
-    });
+    scheduleGameTick(gameState.tickIntervalMs);
   }
 }
 
@@ -169,6 +176,12 @@ async function runGameTick(): Promise<void> {
         console.error('[rotagotchi] Notification error:', err);
       }
     }
+
+    // Re-schedule for sub-minute tick rates (one-shot alarms don't auto-repeat).
+    if (gameState.tickIntervalMs < 60_000) {
+      await chrome.alarms.clear('game-tick');
+      scheduleGameTick(gameState.tickIntervalMs);
+    }
   } catch (err) {
     console.error('[rotagotchi] Game tick error:', err);
   }
@@ -190,9 +203,7 @@ chrome.runtime.onMessage.addListener((message) => {
       const freshState = resetGameState();
       await writeGameState(freshState);
       await chrome.alarms.clear('game-tick');
-      chrome.alarms.create('game-tick', {
-        periodInMinutes: freshState.tickIntervalMs / 60_000,
-      });
+      scheduleGameTick(freshState.tickIntervalMs);
     })();
   }
 
@@ -207,9 +218,7 @@ chrome.runtime.onMessage.addListener((message) => {
       gameState.lastTickAt = Date.now();
       await writeGameState(gameState);
       await chrome.alarms.clear('game-tick');
-      chrome.alarms.create('game-tick', {
-        periodInMinutes: intervalMs / 60_000,
-      });
+      scheduleGameTick(intervalMs);
     })();
   }
 });

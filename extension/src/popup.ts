@@ -1,6 +1,7 @@
 import lottie, { AnimationItem } from 'lottie-web';
 import {
   getValidSession,
+  validateSession,
   launchOAuthFlow,
   signOut,
   onSessionChanged,
@@ -245,11 +246,10 @@ async function enterMain(): Promise<void> {
 // ─── T013 + T022: DOMContentLoaded — initial routing ─────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // T022: Check for a valid (possibly refreshed) session first.
-  // If the token is near-expiry, getValidSession() will try to refresh it
-  // before we decide which screen to show — preventing a flash of the intro
-  // screen for returning users whose token just expired.
-  const session = await getValidSession();
+  // T022: Always verify session with server on popup open to catch revoked tokens.
+  // getValidSession() would skip the network call if the token isn't near expiry,
+  // missing revocations. validateSession() always refreshes to detect invalidation.
+  const session = await validateSession();
 
   if (session) {
     // T003/T022: Returning user — skip intro and login entirely.

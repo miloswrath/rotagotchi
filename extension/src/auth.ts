@@ -184,6 +184,29 @@ export async function getValidSession(): Promise<StoredAuthSession | null> {
   }
 }
 
+// ─── validateSession ──────────────────────────────────────────────────────────
+
+export async function validateSession(): Promise<StoredAuthSession | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  try {
+    const { data, error } = await getSupabase().auth.refreshSession({
+      refresh_token: session.refreshToken,
+    });
+    if (error || !data.session) {
+      await chrome.storage.local.remove(SESSION_KEY);
+      return null;
+    }
+    const updated = sessionFromSupabase(data.session);
+    await chrome.storage.local.set({ [SESSION_KEY]: updated });
+    return updated;
+  } catch {
+    // Network error — return existing session rather than clearing.
+    return session;
+  }
+}
+
 // ─── T009: signOut ────────────────────────────────────────────────────────────
 
 export async function signOut(): Promise<void> {

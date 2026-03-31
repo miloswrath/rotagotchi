@@ -201,8 +201,7 @@ export function processTick(ctx: TickContext): TickResult {
   // 4. HP delta based on classification × debt state.
   // Constants are defined at default tick speed (TICK_INTERVAL_DEFAULT_MS).
   // Scale by actual elapsed time so the HP rate is consistent regardless of tick speed.
-  const hpElapsedMs = Math.min(elapsedMs, TICK_INTERVAL_DEFAULT_MS * 2);
-  const tickScale = hpElapsedMs / TICK_INTERVAL_DEFAULT_MS;
+  const tickScale = 1;
   const hasDebt = state.debtSeconds > 0;
   let hpDeltaBase: number;
   if (hasDebt && currentClassification === 'neutral') {
