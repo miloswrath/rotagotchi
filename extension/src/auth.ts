@@ -5,6 +5,7 @@ declare const process: {
   env: {
     NEXT_PUBLIC_SUPABASE_URL: string;
     NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+    NEXT_PUBLIC_APP_URL: string;
   };
 };
 
@@ -26,6 +27,7 @@ export type PopupScreen = 'intro' | 'login' | 'main';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL as string;
 
 // Extension manages its own session persistence (chrome.storage.local).
 // Supabase's internal session storage is used only for the PKCE code verifier
@@ -204,6 +206,31 @@ export async function validateSession(): Promise<StoredAuthSession | null> {
   } catch {
     // Network error — return existing session rather than clearing.
     return session;
+  }
+}
+
+// ─── checkInstallStatus ───────────────────────────────────────────────────────
+
+/**
+ * Calls the backend to check whether the user has installed the GitHub App.
+ * Returns the install URL if they haven't, null otherwise.
+ * Fails open (returns null) on network error so the popup still works offline.
+ */
+export async function checkInstallStatus(
+  accessToken: string
+): Promise<string | null> {
+  try {
+    const response = await fetch(`${APP_URL}/api/auth/install-status`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) return null;
+    const body = (await response.json()) as {
+      needsInstall?: boolean;
+      installUrl?: string;
+    };
+    return body.needsInstall && body.installUrl ? body.installUrl : null;
+  } catch {
+    return null;
   }
 }
 

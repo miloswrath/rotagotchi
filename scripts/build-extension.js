@@ -70,12 +70,20 @@ const entryPoints = [
 async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? localEnv.NEXT_PUBLIC_SUPABASE_URL ?? '';
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? localEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? localEnv.NEXT_PUBLIC_APP_URL ?? '';
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn(
       '\n⚠️  WARNING: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing.\n' +
       '   The extension will crash at startup (blank popup, broken service worker).\n' +
       '   Create .env.local with both variables before building.\n'
+    );
+  }
+  if (!appUrl) {
+    console.warn(
+      '\n⚠️  WARNING: NEXT_PUBLIC_APP_URL is missing.\n' +
+      '   The extension will not be able to check GitHub App installation status after login.\n' +
+      '   Add NEXT_PUBLIC_APP_URL to .env.local (e.g. http://localhost:3000).\n'
     );
   }
 
@@ -90,6 +98,7 @@ async function main() {
     define: {
       'process.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
+      'process.env.NEXT_PUBLIC_APP_URL': JSON.stringify(appUrl),
     },
   });
 

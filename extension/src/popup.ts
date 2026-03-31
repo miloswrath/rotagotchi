@@ -2,6 +2,7 @@ import lottie, { AnimationItem } from 'lottie-web';
 import {
   getValidSession,
   validateSession,
+  checkInstallStatus,
   launchOAuthFlow,
   signOut,
   onSessionChanged,
@@ -269,7 +270,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     loginError.classList.add('screen-hidden');
 
     try {
-      await launchOAuthFlow();
+      const newSession = await launchOAuthFlow();
+      // Open the GitHub App installation page if the user hasn't installed it yet.
+      const installUrl = await checkInstallStatus(newSession.accessToken);
+      if (installUrl) {
+        chrome.tabs.create({ url: installUrl });
+      }
       await enterMain();
     } catch (err) {
       // T015: Show error and retry path.
