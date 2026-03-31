@@ -52,6 +52,7 @@ function getSupabase(): ReturnType<typeof createClient> {
 }
 
 const SESSION_KEY = 'authSession';
+const PROVIDER_TOKEN_KEY = 'authProviderToken';
 const REFRESH_THRESHOLD_SECONDS = 5 * 60; // refresh if expiry is within 5 min
 
 // ─── T004: getSession ─────────────────────────────────────────────────────────
@@ -133,6 +134,13 @@ export async function launchOAuthFlow(): Promise<StoredAuthSession> {
     }
     const session = sessionFromSupabase(exchangeData.session);
     await chrome.storage.local.set({ [SESSION_KEY]: session });
+    // Stash GitHub provider token so checkInstallStatus can forward it to the
+    // backend for storage in user_github_tokens. Cleared after first use.
+    const pt = exchangeData.session.provider_token ?? null;
+    const prt = exchangeData.session.provider_refresh_token ?? null;
+    if (pt) {
+      await chrome.storage.local.set({ [PROVIDER_TOKEN_KEY]: { token: pt, refreshToken: prt } });
+    }
     return session;
   }
 
@@ -149,6 +157,11 @@ export async function launchOAuthFlow(): Promise<StoredAuthSession> {
     }
     const session = sessionFromSupabase(sessionData.session);
     await chrome.storage.local.set({ [SESSION_KEY]: session });
+    const pt = sessionData.session.provider_token ?? null;
+    const prt = sessionData.session.provider_refresh_token ?? null;
+    if (pt) {
+      await chrome.storage.local.set({ [PROVIDER_TOKEN_KEY]: { token: pt, refreshToken: prt } });
+    }
     return session;
   }
 
@@ -220,9 +233,26 @@ export async function checkInstallStatus(
   accessToken: string
 ): Promise<string | null> {
   try {
-    const response = await fetch(`${APP_URL}/api/auth/install-status`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    // Consume any stashed GitHub provider token from the most recent OAuth exchange.
+    const stored = await chrome.storage.local.get(PROVIDER_TOKEN_KEY);
+    const providerTokenData = stored[PROVIDER_TOKEN_KEY] as
+      | { token: string; refreshToken: string | null }
+      | undefined;
+    if (providerTokenData) {
+      await chrome.storage.local.remove(PROVIDER_TOKEN_KEY);
+    }
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+    if (providerTokenData?.token) {
+      headers['x-github-token'] = providerTokenData.token;
+      if (providerTokenData.refreshToken) {
+        headers['x-github-refresh-token'] = providerTokenData.refreshToken;
+      }
+    }
+
+    const response = await fetch(`${APP_URL}/api/auth/install-status`, { headers });
     if (!response.ok) return null;
     const body = (await response.json()) as {
       needsInstall?: boolean;

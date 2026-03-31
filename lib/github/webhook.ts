@@ -257,6 +257,23 @@ export async function handleInstallationEvent(
       },
       { onConflict: "installation_id", ignoreDuplicates: false }
     );
+
+    // Immediately link to any existing Supabase user whose GitHub login matches.
+    // This handles the extension OAuth flow where the user authenticates before
+    // installing the app, so the install-status linking pass already ran and found
+    // no row to update.
+    const { data: { users } } = await supabase.auth.admin.listUsers();
+    const match = users.find(
+      (u) =>
+        (u.user_metadata?.user_name as string | undefined) ===
+        installation.account.login
+    );
+    if (match) {
+      await supabase
+        .from("webhook_installations")
+        .update({ user_id: match.id })
+        .eq("installation_id", installation.id);
+    }
   } else if (action === "deleted") {
     await supabase
       .from("webhook_installations")
